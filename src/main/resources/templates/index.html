@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная страница</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+<header>
+    <h1>Добро пожаловать в управление проектом</h1>
+    <nav>
+        <ul>
+            <li><a th:href="@{/toilets}">Туалеты</a></li>
+            <li><a th:href="@{/orders}">Заказы</a></li>
+            <li><a th:href="@{/categories}">Категории</a></li>
+            <li><a th:href="@{/users}">Пользователи</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <p>Выберите раздел для управления сущностями.</p>
+</main>
+
+</body>
+</html>

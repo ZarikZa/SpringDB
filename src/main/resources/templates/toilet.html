@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Управление унитазами</title>
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .search-box { margin-bottom: 20px; }
+        .form-section { background: #f5f5f5; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .list-section { margin-top: 20px; }
+        .item { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+        .actions { margin-top: 10px; }
+        .btn { padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; display: inline-block; border: none; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-success { background: #28a745; color: white; }
+        .pagination { margin: 20px 0; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; }
+        .checkbox-item { margin-bottom: 10px; }
+        .inline-form { display: inline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Управление унитазами</h1>
+        <div>
+            <a th:href="@{/categories}" class="btn btn-warning">Категории</a>
+            <a th:href="@{/}" class="btn btn-home">На главную</a>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <form method="get" th:action="@{/toilets}">
+            <input type="text" name="search" th:value="${searchTerm}" placeholder="Поиск по названию или модели...">
+            <button type="submit" class="btn btn-primary">Найти</button>
+            <a th:href="@{/toilets}" class="btn">Сбросить</a>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h3>Добавить новый унитаз</h3>
+        <form method="post" th:action="@{/toilets/add}">
+            <div class="form-group">
+                <label>Название:</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Бренд:</label>
+                <input type="text" name="brand" required>
+            </div>
+            <div class="form-group">
+                <label>Модель:</label>
+                <input type="text" name="model" required>
+            </div>
+            <div class="form-group">
+                <label>Цвет:</label>
+                <input type="text" name="color" required>
+            </div>
+            <div class="form-group">
+                <label>Цена:</label>
+                <input type="number" name="price" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Количество на складе:</label>
+                <input type="number" name="stockQuantity" required>
+            </div>
+            <div class="form-group">
+                <label>Материал:</label>
+                <input type="text" name="material" required>
+            </div>
+            <div class="form-group">
+                <label>Категория:</label>
+                <select name="category.id" required>
+                    <option value="">Выберите категорию</option>
+                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="waterSaving">
+                    Экономия воды
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить унитаз</button>
+        </form>
+    </div>
+
+    <div class="pagination" th:if="${totalPages > 1}">
+        <span>Страница [[${currentPage}]] из [[${totalPages}]] (Всего: [[${totalCount}]])</span>
+        <div>
+            <a th:if="${currentPage > 1}"
+               th:href="@{/toilets(page=${currentPage - 1}, size=${pageSize}, search=${searchTerm}, brand=${selectedBrand}, categoryId=${selectedCategoryId}, maxPrice=${selectedMaxPrice})}"
+               class="btn">← Предыдущая</a>
+
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                <a th:if="${i != currentPage}"
+                   th:href="@{/toilets(page=${i}, size=${pageSize}, search=${searchTerm}, brand=${selectedBrand}, categoryId=${selectedCategoryId}, maxPrice=${selectedMaxPrice})}"
+                   class="btn" th:text="${i}"></a>
+                <strong th:if="${i == currentPage}" th:text="${i}"
+                        style="padding: 5px 10px; background: #007bff; color: white;"></strong>
+            </span>
+
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{/toilets(page=${currentPage + 1}, size=${pageSize}, search=${searchTerm}, brand=${selectedBrand}, categoryId=${selectedCategoryId}, maxPrice=${selectedMaxPrice})}"
+               class="btn">Следующая →</a>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3>Множественные действия с выбранными унитазами:</h3>
+        <form method="post" th:action="@{/toilets/delete-multiple}" id="multipleActionsForm">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить выбранные унитазы?')">
+                Удалить выбранные
+            </button>
+            <button type="submit" formaction="/toilets/soft-delete-multiple" class="btn btn-warning">
+                Скрыть выбранные
+            </button>
+        </form>
+    </div>
+
+    <div class="list-section">
+        <h3>Список унитазов</h3>
+
+        <div th:if="${totalCount == 0}">
+            <p>Унитазы не найдены.</p>
+        </div>
+
+        <form id="multipleActionsForm">
+            <div th:each="toilet : ${toilets}" class="item">
+                <div class="checkbox-item">
+                    <label>
+                        <input type="checkbox" name="ids" th:value="${toilet.id}" form="multipleActionsForm">
+                        <strong>[[${toilet.name}]]</strong> — Бренд: [[${toilet.brand}]], Модель: [[${toilet.model}]]
+                    </label>
+                </div>
+                <p>Цена: [[${#numbers.formatDecimal(toilet.price, 1, 2)}]] руб.,
+                    Материал: [[${toilet.material}]],
+                    Категория: [[${toilet.category.name}]],
+                    На складе: [[${toilet.stockQuantity}]] шт.
+                </p>
+
+                <div class="actions">
+                    <a th:href="@{/toilets/edit/{id}(id=${toilet.id})}" class="btn btn-primary">Редактировать</a>
+
+                    <form method="post" th:action="@{/toilets/delete}" class="inline-form">
+                        <input type="hidden" name="id" th:value="${toilet.id}">
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Удалить унитаз [[${toilet.name}]]?')">
+                            Удалить
+                        </button>
+                    </form>
+
+                    <form method="post" th:action="@{/toilets/soft-delete}" class="inline-form">
+                        <input type="hidden" name="id" th:value="${toilet.id}">
+                        <button type="submit" class="btn btn-warning"
+                                onclick="return confirm('Скрыть унитаз [[${toilet.name}]]?')">
+                            Скрыть
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Toilet management page loaded');
+    });
+</script>
+</body>
+</html>

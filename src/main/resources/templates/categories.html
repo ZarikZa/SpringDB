@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Управление категориями</title>
+    <meta charset="UTF-8">
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .search-box { margin-bottom: 20px; }
+        .category-form { background: #f5f5f5; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .category-list { margin-top: 20px; }
+        .category-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+        .actions { margin-top: 10px; }
+        .btn { padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; display: inline-block; border: none; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-home { background: #6c757d; color: white; }
+        .btn-toilets { background: #28a745; color: white; }
+        .pagination { margin: 20px 0; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 8px; }
+        .multiple-actions { background: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .checkbox-item { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Управление категориями унитазов</h1>
+        <div>
+            <a th:href="@{/toilets}" class="btn btn-toilets">Унитазы</a>
+            <a th:href="@{/}" class="btn btn-home">На главную</a>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <form method="get" th:action="@{/categories}">
+            <input type="text" name="search" th:value="${searchTerm}" placeholder="Поиск по названию...">
+            <button type="submit" class="btn btn-primary">Найти</button>
+            <a th:href="@{/categories}" class="btn">Сбросить</a>
+        </form>
+    </div>
+
+    <div class="category-form">
+        <h3>Добавить новую категорию</h3>
+        <form method="post" th:action="@{/categories/add}">
+            <div class="form-group">
+                <label>Название категории:</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Описание:</label>
+                <textarea name="description" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить категорию</button>
+        </form>
+    </div>
+
+    <!-- Форма для массовых действий -->
+    <form method="post" th:action="@{/categories/multiple-action}">
+        <div class="category-list">
+            <h3>Список категорий</h3>
+
+            <div th:if="${totalCount == 0}">
+                <p>Категории не найдены.</p>
+            </div>
+
+            <div th:each="category : ${categories}" class="category-item">
+                <div class="checkbox-item">
+                    <label>
+                        <input type="checkbox" name="ids" th:value="${category.id}">
+                        <strong th:text="${category.name}"></strong>
+                    </label>
+                </div>
+                <p th:text="${category.description}"></p>
+
+                <div class="actions">
+                    <!-- Форма для обновления категории -->
+                    <form method="post" th:action="@{/categories/update}" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${category.id}">
+                        <input type="text" name="name" th:value="${category.name}" required style="width: 200px;">
+                        <textarea name="description" rows="2" style="width: 300px;" th:text="${category.description}"></textarea>
+                        <button type="submit" class="btn btn-primary">Обновить</button>
+                    </form>
+
+                    <!-- Форма для удаления категории -->
+                    <form method="post" th:action="@{/categories/delete}" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${category.id}">
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Вы уверены, что хотите удалить эту категорию?')">
+                            Удалить
+                        </button>
+                    </form>
+
+                    <!-- Форма для мягкого удаления -->
+                    <form method="post" th:action="@{/categories/soft-delete}" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${category.id}">
+                        <button type="submit" class="btn btn-warning"
+                                onclick="return confirm('Вы уверены, что хотите скрыть эту категорию?')">
+                            Скрыть
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Кнопки массовых действий -->
+        <div class="multiple-actions" th:if="${totalCount > 0}">
+            <button type="submit" name="action" value="delete" class="btn btn-danger"
+                    onclick="return confirm('Вы уверены, что хотите удалить выбранные категории?')">
+                Удалить выбранные
+            </button>
+            <button type="submit" name="action" value="soft-delete" class="btn btn-warning"
+                    onclick="return confirm('Вы уверены, что хотите скрыть выбранные категории?')">
+                Скрыть выбранные
+            </button>
+        </div>
+    </form>
+
+    <div class="pagination" th:if="${totalPages > 1}">
+        <span>Страница <span th:text="${currentPage}"></span> из <span th:text="${totalPages}"></span> (Всего: <span th:text="${totalCount}"></span>)</span>
+        <div>
+            <a th:if="${currentPage > 1}"
+               th:href="@{/categories(page=${currentPage - 1}, size=${pageSize}, search=${searchTerm})}" class="btn">← Предыдущая</a>
+
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                <a th:if="${i != currentPage}"
+                   th:href="@{/categories(page=${i}, size=${pageSize}, search=${searchTerm})}" class="btn"
+                   th:text="${i}"></a>
+                <strong th:if="${i == currentPage}" th:text="${i}" style="padding: 5px 10px; background: #007bff; color: white;"></strong>
+            </span>
+
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{/categories(page=${currentPage + 1}, size=${pageSize}, search=${searchTerm})}" class="btn">Следующая →</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

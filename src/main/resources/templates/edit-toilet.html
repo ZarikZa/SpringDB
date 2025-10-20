@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Редактирование унитаза</title>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; }
+        .btn { padding: 8px 15px; margin: 5px; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Редактирование унитаза</h1>
+
+    <form method="post" th:action="@{/toilets/update}">
+        <input type="hidden" name="id" th:value="${toilet.id}">
+
+        <div class="form-group">
+            <label>Название:</label>
+            <input type="text" name="name" th:value="${toilet.name}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Бренд:</label>
+            <input type="text" name="brand" th:value="${toilet.brand}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Модель:</label>
+            <input type="text" name="model" th:value="${toilet.model}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Цвет:</label>
+            <input type="text" name="color" th:value="${toilet.color}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Цена:</label>
+            <input type="number" name="price" th:value="${toilet.price}" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <label>Количество на складе:</label>
+            <input type="number" name="stockQuantity" th:value="${toilet.stockQuantity}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Материал:</label>
+            <input type="text" name="material" th:value="${toilet.material}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Категория:</label>
+            <select name="category.id" required>
+                <option th:each="cat : ${categories}"
+                        th:value="${cat.id}"
+                        th:text="${cat.name}"
+                        th:selected="${cat.id == toilet.category.id}">
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="waterSaving" th:checked="${toilet.waterSaving}">
+                Экономия воды
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a th:href="@{/toilets}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+</body>
+</html>
