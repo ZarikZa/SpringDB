@@ -5,24 +5,26 @@ import com.example.project2.model.OrderStatus;
 import com.example.project2.model.User;
 import com.example.project2.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class OrderServiceImpl implements OrderService {
-    @Autowired private OrderRepository repo;
-    @Autowired private UserService userService;
+    @Autowired
+    private OrderRepository repo;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<Order> findAllOrders() {
         return repo.findAll();
     }
-
 
     @Override
     public List<Order> findActiveOrders() {
@@ -41,28 +43,20 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order updateOrder(Order order) {
-        try {
-            // Проверяем, что заказ существует
-            Order existingOrder = findOrderById(order.getId());
-            if (existingOrder == null) {
-                throw new RuntimeException("Order not found with id: " + order.getId());
-            }
-
-            // Обновляем только необходимые поля
+        Order existingOrder = findOrderById(order.getId());
+        if (existingOrder != null) {
             existingOrder.setStatus(order.getStatus());
             existingOrder.setShippingAddress(order.getShippingAddress());
             existingOrder.setNotes(order.getNotes());
             existingOrder.setTotalAmount(order.getTotalAmount());
 
-            // Если обновляется пользователь
             if (order.getUser() != null) {
                 existingOrder.setUser(order.getUser());
             }
 
             return repo.save(existingOrder);
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating order: " + e.getMessage(), e);
         }
+        return null;
     }
 
     @Override
@@ -110,16 +104,13 @@ public class OrderServiceImpl implements OrderService {
         if (status != null && userId != null) {
             return repo.findByStatusAndUserIdAndIsDeletedFalse(status, userId, Pageable.unpaged()).getContent();
         } else if (status != null) {
-            // Фильтр только по статусу
             return repo.findByStatusAndIsDeletedFalse(status, Pageable.unpaged()).getContent();
         } else if (userId != null) {
-            // Фильтр только по пользователю
             return repo.findByUserIdAndIsDeletedFalse(userId, Pageable.unpaged()).getContent();
         } else {
             return findActiveOrders();
         }
     }
-
 
     @Override
     public List<Order> getOrdersWithPagination(int page, int size, List<Order> sourceList) {
@@ -138,8 +129,6 @@ public class OrderServiceImpl implements OrderService {
         return sourceList.subList(start, end);
     }
 
-
-
     @Override
     public long getTotalOrdersCount(List<Order> sourceList) {
         return sourceList != null ? sourceList.size() : 0;
@@ -149,5 +138,4 @@ public class OrderServiceImpl implements OrderService {
     public List<User> getAllUsers() {
         return userService.findActiveUsers();
     }
-
 }

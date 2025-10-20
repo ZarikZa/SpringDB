@@ -86,6 +86,7 @@
         </div>
     </div>
 
+    <!-- Поиск и фильтры -->
     <div class="search-box">
         <form method="get" th:action="@{/orders}">
             <div style="display: flex; gap: 10px; align-items: end;">
@@ -125,6 +126,7 @@
         </form>
     </div>
 
+    <!-- Форма создания заказа -->
     <div class="form-section">
         <h3>Создать новый заказ</h3>
         <form method="post" th:action="@{/orders/add}">
@@ -168,6 +170,7 @@
         </form>
     </div>
 
+    <!-- Пагинация -->
     <div class="pagination" th:if="${totalPages > 1}">
         <span>Страница <span th:text="${currentPage}"></span> из <span th:text="${totalPages}"></span> (Всего записей: <span th:text="${totalCount}"></span>)</span>
         <div>
@@ -176,14 +179,14 @@
                class="btn">← Предыдущая</a>
 
             <span th:each="i : ${#numbers.sequence(1, totalPages)}">
-            <a th:if="${i != currentPage}"
-               th:href="@{|/orders?page=${i}&size=${pageSize}${searchTerm != null ? '&search=' + searchTerm : ''}${selectedStatus != null ? '&status=' + selectedStatus : ''}${selectedUserId != null ? '&userId=' + selectedUserId : ''}|}"
-               class="btn"
-               th:text="${i}"></a>
-            <strong th:if="${i == currentPage}"
-                    th:text="${i}"
-                    style="padding: 5px 10px; background: #007bff; color: white;"></strong>
-        </span>
+                <a th:if="${i != currentPage}"
+                   th:href="@{|/orders?page=${i}&size=${pageSize}${searchTerm != null ? '&search=' + searchTerm : ''}${selectedStatus != null ? '&status=' + selectedStatus : ''}${selectedUserId != null ? '&userId=' + selectedUserId : ''}|}"
+                   class="btn"
+                   th:text="${i}"></a>
+                <strong th:if="${i == currentPage}"
+                        th:text="${i}"
+                        style="padding: 5px 10px; background: #007bff; color: white;"></strong>
+            </span>
 
             <a th:if="${currentPage < totalPages}"
                th:href="@{|/orders?page=${currentPage + 1}&size=${pageSize}${searchTerm != null ? '&search=' + searchTerm : ''}${selectedStatus != null ? '&status=' + selectedStatus : ''}${selectedUserId != null ? '&userId=' + selectedUserId : ''}|}"
@@ -191,17 +194,26 @@
         </div>
     </div>
 
+    <!-- Множественные действия -->
     <div class="form-section">
         <h3>Множественные действия с выбранными заказами:</h3>
-        <form method="post" th:action="@{/orders/delete-multiple}" style="display: inline;">
-            <button type="submit" class="btn btn-danger">Удалить выбранные</button>
+
+        <form method="post" th:action="@{/orders/delete-multiple}">
+            <button type="submit" class="btn btn-danger"
+                    th:onclick="|return confirm('Вы уверены, что хотите удалить выбранные заказы?')|">
+                Удалить выбранные
+            </button>
         </form>
 
-        <form method="post" th:action="@{/orders/soft-delete-multiple}" style="display: inline;">
-            <button type="submit" class="btn btn-warning">Скрыть выбранные</button>
+        <form method="post" th:action="@{/orders/soft-delete-multiple}">
+            <button type="submit" class="btn btn-warning"
+                    th:onclick="|return confirm('Вы уверены, что хотите скрыть выбранные заказы?')|">
+                Скрыть выбранные
+            </button>
         </form>
     </div>
 
+    <!-- Список заказов -->
     <div class="list-section">
         <h3>Список заказов</h3>
 
@@ -209,42 +221,47 @@
             <p>Заказы не найдены.</p>
         </div>
 
-        <div th:each="order : ${orders}" class="item">
-            <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" name="ids" th:value="${order.id}">
-                    <strong>Заказ №<span th:text="${order.id}"></span></strong> —
-                    Пользователь: <span th:text="${order.user != null ? order.user.fullName : 'Неизвестно'}"></span>
-                </label>
-            </div>
-            <p>Адрес: <span th:text="${order.shippingAddress}"></span>,
-                Статус: <span th:text="${order.status}"></span>,
-                Дата: <span th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}"></span>
-            </p>
-            <p>Сумма: <span th:text="${order.totalAmount != null ? order.totalAmount : '0.00'}"></span></p>
-            <div class="actions">
-                <form method="post" th:action="@{/orders/update}" style="display: inline;">
-                    <input type="hidden" name="id" th:value="${order.id}">
-                    <select name="status">
-                        <option th:each="status : ${statuses}"
-                                th:selected="${status == order.status}"
-                                th:value="${status}"
-                                th:text="${status}"></option>
-                    </select>
-                    <button type="submit" class="btn btn-primary">Обновить статус</button>
-                </form>
+        <!-- Общая форма для множественных действий -->
+        <form method="post" id="ordersForm">
+            <div th:each="order : ${orders}" class="item">
+                <div class="checkbox-item">
+                    <label>
+                        <input type="checkbox" name="ids" th:value="${order.id}">
+                        <strong>Заказ №<span th:text="${order.id}"></span></strong> —
+                        Пользователь: <span th:text="${order.user != null ? order.user.fullName : 'Неизвестно'}"></span>
+                    </label>
+                </div>
+                <p>Адрес: <span th:text="${order.shippingAddress}"></span>,
+                    Статус: <span th:text="${order.status}"></span>,
+                    Дата: <span th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}"></span>
+                </p>
+                <p>Сумма: <span th:text="${order.totalAmount != null ? order.totalAmount : '0.00'}"></span></p>
+                <div class="actions">
+                    <form method="post" th:action="@{/orders/update}" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${order.id}">
+                        <select name="status">
+                            <option th:each="status : ${statuses}"
+                                    th:selected="${status == order.status}"
+                                    th:value="${status}"
+                                    th:text="${status}"></option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Обновить статус</button>
+                    </form>
 
-                <form method="post" th:action="@{/orders/delete}" style="display: inline;">
-                    <input type="hidden" name="id" th:value="${order.id}">
-                    <button type="submit" class="btn btn-danger">Удалить</button>
-                </form>
+                    <form method="post" th:action="@{/orders/delete}" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${order.id}">
+                        <button type="submit" class="btn btn-danger"
+                                th:onclick="|return confirm('Удалить заказ №${order.id}?')|">Удалить</button>
+                    </form>
 
-                <form method="post" th:action="@{/orders/soft-delete}" style="display: inline;">
-                    <input type="hidden" name="id" th:value="${order.id}">
-                    <button type="submit" class="btn btn-warning">Скрыть</button>
-                </form>
+                    <form method="post" th:action="@{/orders/soft-delete}" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${order.id}">
+                        <button type="submit" class="btn btn-warning"
+                                th:onclick="|return confirm('Скрыть заказ №${order.id}?')|">Скрыть</button>
+                    </form>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 </body>

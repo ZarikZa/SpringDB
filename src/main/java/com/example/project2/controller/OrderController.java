@@ -72,15 +72,6 @@ public class OrderController {
         return "orders";
     }
 
-    @GetMapping("/add")
-    public String showAddOrderForm(Model model) {
-        model.addAttribute("order", new Order());
-        model.addAttribute("users", userService.findActiveUsers());
-        model.addAttribute("toilets", toiletService.findActiveToilets());
-        model.addAttribute("statuses", OrderStatus.values());
-        return "order-form"; // или вернуть ту же страницу, если форма на той же странице
-    }
-
     @PostMapping("/add")
     public String addOrder(@ModelAttribute Order order,
                            @RequestParam(required = false) List<Long> toiletIds) {
@@ -90,19 +81,6 @@ public class OrderController {
         }
         order.calculateTotalAmount();
         orderService.addOrder(order);
-        return "redirect:/orders";
-    }
-
-    @GetMapping("/edit/{id}")
-    public String showEditOrderForm(@PathVariable Long id, Model model) {
-        Order order = orderService.findOrderById(id);
-        if (order != null) {
-            model.addAttribute("order", order);
-            model.addAttribute("users", userService.findActiveUsers());
-            model.addAttribute("toilets", toiletService.findActiveToilets());
-            model.addAttribute("statuses", OrderStatus.values());
-            return "order-form";
-        }
         return "redirect:/orders";
     }
 
@@ -129,14 +107,18 @@ public class OrderController {
     }
 
     @PostMapping("/delete-multiple")
-    public String deleteMultipleOrders(@RequestParam List<Long> ids) {
-        orderService.deleteMultipleOrders(ids);
+    public String deleteMultipleOrders(@RequestParam(value = "ids", required = false) List<Long> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            orderService.deleteMultipleOrders(ids);
+        }
         return "redirect:/orders";
     }
 
     @PostMapping("/soft-delete-multiple")
-    public String softDeleteMultipleOrders(@RequestParam List<Long> ids) {
-        orderService.softDeleteMultipleOrders(ids);
+    public String softDeleteMultipleOrders(@RequestParam(value = "ids", required = false) List<Long> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            orderService.softDeleteMultipleOrders(ids);
+        }
         return "redirect:/orders";
     }
 }

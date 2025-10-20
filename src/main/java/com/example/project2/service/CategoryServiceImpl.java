@@ -61,7 +61,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public long getTotalCategoriesCount(List<Category> sourceList) {
-        return repo.countByIsDeletedFalse(); // Добавьте этот метод в репозиторий
+        return repo.countByIsDeletedFalse();
     }
 
     @Override
