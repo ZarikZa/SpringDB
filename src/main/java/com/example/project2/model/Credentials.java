@@ -13,28 +13,29 @@ public class Credentials {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Логин обязателен")
-    @Size(min = 4, max = 50, message = "Логин должен быть от 4 до 50 символов")
-    @Column(nullable = false, unique = true)
+    @NotBlank(message = "Имя пользователя обязательно")
+    @Size(min = 3, max = 50, message = "Имя пользователя должно быть от 3 до 50 символов")
+    @Column(unique = true, nullable = false)
     private String username;
 
     @NotBlank(message = "Пароль обязателен")
-    @Size(min = 6, message = "Пароль должен быть не менее 6 символов")
     @Column(nullable = false)
     private String password;
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-    @Column(name = "is_locked")
-    private boolean isLocked = false;
-
     @Column(name = "failed_login_attempts")
     private int failedLoginAttempts = 0;
 
-    // 1 к 1 связь с User
+    @Column(name = "is_locked")
+    private boolean isLocked = false;
+
+    @Column(name = "lock_until")
+    private LocalDateTime lockUntil;
+
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public Credentials() {}
@@ -57,11 +58,14 @@ public class Credentials {
     public LocalDateTime getLastLogin() { return lastLogin; }
     public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
 
+    public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public void setFailedLoginAttempts(int failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+
     public boolean isLocked() { return isLocked; }
     public void setLocked(boolean locked) { isLocked = locked; }
 
-    public int getFailedLoginAttempts() { return failedLoginAttempts; }
-    public void setFailedLoginAttempts(int failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+    public LocalDateTime getLockUntil() { return lockUntil; }
+    public void setLockUntil(LocalDateTime lockUntil) { this.lockUntil = lockUntil; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
